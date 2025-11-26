@@ -31,7 +31,7 @@ const DashboardPage = () => {
     fetchTasks();
   }, []);
 
-  const filteredTasks = tasks.filter(task => 
+  const filteredTasks = (tasks ?? []).filter(task => 
     task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     task.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -45,8 +45,8 @@ const DashboardPage = () => {
         
         {/* User Profile */}
         <div className="bg-white p-6 shadow rounded-lg mb-6">
-          <h1 className="text-xl font-semibold text-gray-900">Welcome, {user.username}!</h1>
-          <p className="text-gray-500">Your Email: {user.email}</p>
+          <h1 className="text-xl font-semibold text-gray-900">Welcome, {user.name}!</h1>
+        
         </div>
 
         {/* Task Management */}

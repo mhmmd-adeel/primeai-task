@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api'; // Import the configured Axios instance
 
+
 const RegisterPage = () => {
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
   const [errorMsg, setErrorMsg] = React.useState('');
@@ -11,6 +12,7 @@ const RegisterPage = () => {
   
   // Watch password field for confirm password validation
   const password = watch("password", "");
+  const { login } = useAuth();
 
   const onSubmit = async (data) => {
     setErrorMsg('');
@@ -23,8 +25,7 @@ const RegisterPage = () => {
         password: data.password 
       });
       
-      // On success, show a message. Do NOT log them in automatically (best practice).
-      setSuccessMsg(response.data.message || 'Registration successful! You can now log in.');
+      autoSignInAfterRegistration(response.data.token, response.data.user);
       
     } catch (err) {
       console.error('Registration error:', err.response?.data);

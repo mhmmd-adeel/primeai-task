@@ -1,20 +1,18 @@
+// backend/routes/task.routes.js
+
 import express from "express";
-import auth from "../middleware/auth.js";
-import {
-  createTask,
-  getTasks,
-  getTaskById,
-  updateTask,
-  deleteTask,
-} from "../controllers/task.controllers.js";
+import { createTask, getTasks, updateTask, deleteTask } from "../controllers/task.controllers.js";
+import { protect } from "../middleware/auth.js"; // 👈 Import the middleware
 
 const router = express.Router();
 
-// all routes require JWT
-router.post("/", auth, createTask);
-router.get("/", auth, getTasks);
-router.get("/:id", auth, getTaskById);
-router.put("/:id", auth, updateTask);
-router.delete("/:id", auth, deleteTask);
+// Apply 'protect' middleware to all task routes
+router.route("/")
+    .get(protect, getTasks) // 💡 Now requires a valid JWT
+    .post(protect, createTask);
+
+router.route("/:id")
+    .put(protect, updateTask) // 💡 Now requires a valid JWT
+    .delete(protect, deleteTask);
 
 export default router;

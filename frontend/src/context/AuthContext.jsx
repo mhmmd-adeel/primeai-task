@@ -10,23 +10,22 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check for token on initial load
-    const token = localStorage.getItem('token');
-    if (token) {
-      // You can add logic here to validate token/fetch user profile
-      fetchProfile();
-    } else {
-      setLoading(false);
-    }
-  }, []);
+  // 💡 NEW HELPER: Central function to store token and redirect.
+  const handleAuthSuccess = (token, userData) => {
+    localStorage.setItem('token', token);
+    setUser(userData);
+    navigate('/dashboard');
+  };
 
+  // 🔄 FIX (State Persistence): Function to fetch user profile on refresh
   const fetchProfile = async () => {
     try {
+      // Uses the token in localStorage to fetch user data (Protected Route)
       const response = await api.get('/auth/profile');
-      setUser(response.data.user);
+      // Note: Your backend profile endpoint must return the user object within data: { user: { ... } }
+      setUser(response.data.user); 
     } catch (error) {
-      // If fetching profile fails (e.g., token expired/invalid), log out
+      // If fetching fails (token expired or invalid), we clear the session
       localStorage.removeItem('token');
       setUser(null);
     } finally {
@@ -34,12 +33,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Runs only once on initial load (State Persistence)
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchProfile();
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  // Original Login function (used by LoginPage)
   const login = async (email, password) => {
+    // 💡 Wires up to your POST /api/auth/login endpoint
     const response = await api.post('/auth/login', { email, password });
     const { token, user } = response.data;
-    localStorage.setItem('token', token);
-    setUser(user);
-    navigate('/dashboard');
+    handleAuthSuccess(token, user); // Use central handler
+  };
+
+  // 🚀 NEW FUNCTION: Used by RegisterPage to bypass the manual login step
+  const autoSignInAfterRegistration = (token, user) => {
+    handleAuthSuccess(token, user); // Use central handler
   };
 
   const logout = () => {
@@ -48,11 +62,20 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
-  const value = { user, loading, login, logout, isAuthenticated: !!user };
+  // Expose the new autoSignInAfterRegistration function
+  const value = { 
+    user, 
+    loading, 
+    login, 
+    logout, 
+    autoSignInAfterRegistration, // 👈 Exported for RegisterPage to use
+    isAuthenticated: !!user 
+  };
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? <div>Loading...</div> : children}
+      {/* Show loading state while validating token on refresh */}
+      {loading ? <div className="min-h-screen flex items-center justify-center text-xl text-indigo-600">Checking Session...</div> : children}
     </AuthContext.Provider>
   );
 };
