@@ -1,4 +1,3 @@
-// src/pages/LoginPage.jsx
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
@@ -14,7 +13,6 @@ const LoginPage = () => {
     try {
       await login(data.email, data.password);
     } catch (err) {
-      // Map your backend validation/error messages here
       setErrorMsg(err.response?.data?.message || 'Login failed. Please check your credentials.');
     }
   };

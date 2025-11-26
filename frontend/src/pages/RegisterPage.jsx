@@ -1,5 +1,3 @@
-// frontend/src/pages/RegisterPage.jsx (Updated onSubmit function)
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
@@ -15,14 +13,12 @@ const RegisterPage = () => {
   const onSubmit = async (data) => {
     setErrorMsg('');
     try {
-      // 💡 Payload fixed in previous step: name: data.username
       const response = await api.post('/auth/signup', { 
         name: data.username, // Send 'name'
         email: data.email,
         password: data.password 
       });
       
-      // 🚀 FIX: Automatically sign in and redirect
       autoSignInAfterRegistration(response.data.token, response.data.user);
       
     } catch (err) {
