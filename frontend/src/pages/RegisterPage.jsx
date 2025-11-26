@@ -1,38 +1,36 @@
+// frontend/src/pages/RegisterPage.jsx (Updated onSubmit function)
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import api from '../services/api'; // Import the configured Axios instance
-
+import { useAuth } from '../context/AuthContext'; // 👈 Must be imported
+import api from '../services/api'; 
 
 const RegisterPage = () => {
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
+  const { autoSignInAfterRegistration } = useAuth(); // 👈 Get the new function
   const [errorMsg, setErrorMsg] = React.useState('');
-  const [successMsg, setSuccessMsg] = React.useState('');
-  
-  // Watch password field for confirm password validation
   const password = watch("password", "");
-  const { login } = useAuth();
 
   const onSubmit = async (data) => {
     setErrorMsg('');
-    setSuccessMsg('');
     try {
-      // 💡 Wires up to your backend's registration endpoint
+      // 💡 Payload fixed in previous step: name: data.username
       const response = await api.post('/auth/signup', { 
-        name: data.username,
+        name: data.username, // Send 'name'
         email: data.email,
         password: data.password 
       });
       
+      // 🚀 FIX: Automatically sign in and redirect
       autoSignInAfterRegistration(response.data.token, response.data.user);
       
     } catch (err) {
       console.error('Registration error:', err.response?.data);
-      // Display specific error message from the backend (e.g., "User already exists")
       setErrorMsg(err.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -43,7 +41,7 @@ const RegisterPage = () => {
         
         {/* Messages */}
         {errorMsg && <div className="p-3 text-sm text-red-700 bg-red-100 rounded">{errorMsg}</div>}
-        {successMsg && <div className="p-3 text-sm text-green-700 bg-green-100 rounded">{successMsg}</div>}
+        
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
           

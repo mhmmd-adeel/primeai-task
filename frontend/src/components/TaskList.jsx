@@ -3,10 +3,23 @@ import api from '../services/api';
 
 /**
  * Renders a list of tasks with options to edit and delete.
- * Assumes a task object has: _id, title, description, and createdAt.
  */
-const TaskList = ({ tasks = [], onTaskUpdate, onTaskDelete }) => {
+// 🚨 FIX 1: Ensure props are destructured correctly, including the onEditTask handler.
+const TaskList = ({ tasks = [], onEditTask, onTaskDelete }) => {
   const [deletingId, setDeletingId] = React.useState(null);
+
+  // Function to determine badge style based on status
+  const getStatusBadge = (status) => {
+    let color = 'bg-gray-200 text-gray-800';
+    if (status === 'In Progress') {
+      color = 'bg-yellow-100 text-yellow-800';
+    } else if (status === 'Completed') {
+      color = 'bg-green-100 text-green-800';
+    } else if (status === 'Pending') {
+      color = 'bg-blue-100 text-blue-800';
+    }
+    return <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium ${color}`}>{status}</span>;
+  };
 
   // Function to format the date
   const formatDate = (dateString) => {
@@ -27,11 +40,8 @@ const TaskList = ({ tasks = [], onTaskUpdate, onTaskDelete }) => {
     
     setDeletingId(taskId);
     try {
-      // 💡 Wires up to your backend's DELETE /api/tasks/:id endpoint
       await api.delete(`/tasks/${taskId}`);
-      
-      // Notify parent component (Dashboard) to refresh the list
-      onTaskDelete();
+      onTaskDelete(); // Notify parent component (Dashboard) to refresh the list
     } catch (error) {
       console.error('Error deleting task:', error.response?.data?.message || error.message);
       alert('Failed to delete task. Check console for details.');
@@ -54,7 +64,11 @@ const TaskList = ({ tasks = [], onTaskUpdate, onTaskDelete }) => {
         <div key={task._id} className="bg-white p-5 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-bold text-gray-900 truncate">{task.title}</h3>
+              <div className="flex items-center mb-2">
+                <h3 className="text-lg font-bold text-gray-900 truncate mr-3">{task.title}</h3>
+                {/* Display the status badge */}
+                {getStatusBadge(task.status)}
+              </div>
               <p className="mt-1 text-sm text-gray-600 break-words">{task.description}</p>
               <p className="mt-2 text-xs text-indigo-600">Created: {formatDate(task.createdAt)}</p>
             </div>
@@ -62,9 +76,9 @@ const TaskList = ({ tasks = [], onTaskUpdate, onTaskDelete }) => {
             <div className="flex-shrink-0 ml-4 flex space-x-2">
               
               {/* Edit Button */}
-              {/* 💡 For the final assignment, this button should open an Edit Modal/Form */}
               <button
-                onClick={() => onTaskUpdate(task)} 
+                // 🚨 FIX 2: Call the correct prop function (onEditTask)
+                onClick={() => onEditTask(task)} 
                 className="text-indigo-600 hover:text-indigo-900 text-sm font-medium p-1 rounded-md hover:bg-gray-100 transition-colors"
                 title="Edit Task"
               >

@@ -10,41 +10,48 @@ export const createTask = async (req, res) => {
       title,
       description,
       status,
-      userId: req.user, // comes from JWT middleware
+   
+      userId: req.user.id, 
     });
 
     return res.status(201).json({ message: "Task created", task });
   } catch (err) {
+    console.error("Error creating task:", err);
     return res.status(500).json({ message: "Error creating task", err });
   }
 };
 
 export const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({ userId: req.user }).sort({ createdAt: -1 });
+    const tasks = await Task.find({ userId: req.user.id }).sort({ createdAt: -1 }); 
 
+    // console.log("Tasks retrieved:", tasks); 
     return res.status(200).json(tasks);
   } catch (err) {
+    console.error("Error fetching tasks:", err); 
     return res.status(500).json({ message: "Error fetching tasks", err });
   }
 };
 
 export const getTaskById = async (req, res) => {
   try {
-    const task = await Task.findOne({ _id: req.params.id, userId: req.user });
+  
+    const task = await Task.findOne({ _id: req.params.id, userId: req.user.id });
 
     if (!task) return res.status(404).json({ message: "Task not found" });
 
     return res.status(200).json(task);
   } catch (err) {
+    console.error("Error fetching task:", err);
     return res.status(500).json({ message: "Error fetching task", err });
   }
 };
 
 export const updateTask = async (req, res) => {
   try {
+ 
     const task = await Task.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user },
+      { _id: req.params.id, userId: req.user.id },
       req.body,
       { new: true }
     );
@@ -53,21 +60,24 @@ export const updateTask = async (req, res) => {
 
     return res.status(200).json({ message: "Task updated", task });
   } catch (err) {
+    console.error("Error updating task:", err);
     return res.status(500).json({ message: "Error updating task", err });
   }
 };
 
 export const deleteTask = async (req, res) => {
   try {
+    
     const task = await Task.findOneAndDelete({
       _id: req.params.id,
-      userId: req.user,
+      userId: req.user.id,
     });
 
     if (!task) return res.status(404).json({ message: "Task not found" });
 
     return res.status(200).json({ message: "Task deleted" });
   } catch (err) {
+    console.error("Error deleting task:", err);
     return res.status(500).json({ message: "Error deleting task", err });
   }
 };

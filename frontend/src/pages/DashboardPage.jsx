@@ -5,27 +5,39 @@ import { useAuth } from '../context/AuthContext';
 import TaskList from '../components/TaskList';
 import TaskForm from '../components/TaskForm';
 import Navbar from '../components/Navbar';
+import TaskEditModal from '../components/TaskEditModal'
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [taskToEdit, setTaskToEdit] = useState(null);
+
+  const handleEditOpen = (task) => setTaskToEdit(task);
+
+  const handleEditClose = () => {
+    setTaskToEdit(null); // Close the modal
+    fetchTasks();        // Refresh list to see updates
+  };
 
   const fetchTasks = async () => {
-    try {
-      const response = await api.get('/tasks'); // Your backend route
-      setTasks(response.data.tasks);
-    } catch (error) {
-      console.error('Failed to fetch tasks:', error);
-      // Handle error, e.g., token expired, forcing logout
-      if (error.response && error.response.status === 401) {
-        logout();
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+        setLoading(true);
+        setErrorMsg('');
+        try {
+            const response = await api.get('/tasks');
+            // 🚨 FIX: Ensure you are setting the state correctly.
+            // If the backend returns: res.status(200).json(tasks);
+            // Then the response data IS the tasks array.
+            setTasks(response.data); 
+            
+        } catch (error) {
+            // ... (error handling)
+        } finally {
+            setLoading(false);
+        }
+    };
 
   useEffect(() => {
     fetchTasks();
@@ -36,8 +48,8 @@ const DashboardPage = () => {
     task.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  if (loading) return <div>Loading Dashboard...</div>;
-
+  if (loading) return <div className='h-screen font-semibold text-lg flex justify-center items-center'>Loading Dashboard...</div>;
+ 
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar user={user} onLogout={logout} />
@@ -71,11 +83,17 @@ const DashboardPage = () => {
                 className="mb-4 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
               />
 
-              <TaskList 
-                tasks={filteredTasks} 
-                onTaskUpdate={fetchTasks} 
-                onTaskDelete={fetchTasks}
-              />
+            <TaskList 
+        tasks={filteredTasks} 
+        onEditTask={handleEditOpen}
+        onTaskDelete={fetchTasks} 
+
+        />
+        <TaskEditModal 
+        task={taskToEdit} 
+        onClose={handleEditClose} 
+        refreshTasks={fetchTasks} 
+      />
             </div>
           </div>
         </div>

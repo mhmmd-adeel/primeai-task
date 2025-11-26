@@ -1,4 +1,4 @@
-// src/context/AuthContext.jsx
+// src/context/AuthContext.jsx (STITCHED/FINAL VERSION)
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -17,15 +17,14 @@ export const AuthProvider = ({ children }) => {
     navigate('/dashboard');
   };
 
-  // 🔄 FIX (State Persistence): Function to fetch user profile on refresh
+  // 🔄 FIX (State Persistence logic)
   const fetchProfile = async () => {
     try {
-      // Uses the token in localStorage to fetch user data (Protected Route)
+      // 💡 Calls the new protected endpoint, api.js automatically adds the token
       const response = await api.get('/auth/profile');
-      // Note: Your backend profile endpoint must return the user object within data: { user: { ... } }
       setUser(response.data.user); 
     } catch (error) {
-      // If fetching fails (token expired or invalid), we clear the session
+      // If token fails validation/expiry check, log out (prevents forced logout on good token)
       localStorage.removeItem('token');
       setUser(null);
     } finally {
@@ -33,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Runs only once on initial load (State Persistence)
+  // Runs on initial load to check for existing session (FIXES LOGOUT ON REFRESH)
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -45,15 +44,14 @@ export const AuthProvider = ({ children }) => {
 
   // Original Login function (used by LoginPage)
   const login = async (email, password) => {
-    // 💡 Wires up to your POST /api/auth/login endpoint
     const response = await api.post('/auth/login', { email, password });
     const { token, user } = response.data;
-    handleAuthSuccess(token, user); // Use central handler
+    handleAuthSuccess(token, user); 
   };
 
-  // 🚀 NEW FUNCTION: Used by RegisterPage to bypass the manual login step
+  // 🚀 Auto Sign In (Used by RegisterPage)
   const autoSignInAfterRegistration = (token, user) => {
-    handleAuthSuccess(token, user); // Use central handler
+    handleAuthSuccess(token, user);
   };
 
   const logout = () => {
@@ -62,19 +60,17 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
-  // Expose the new autoSignInAfterRegistration function
   const value = { 
     user, 
     loading, 
     login, 
     logout, 
-    autoSignInAfterRegistration, // 👈 Exported for RegisterPage to use
+    autoSignInAfterRegistration,
     isAuthenticated: !!user 
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {/* Show loading state while validating token on refresh */}
       {loading ? <div className="min-h-screen flex items-center justify-center text-xl text-indigo-600">Checking Session...</div> : children}
     </AuthContext.Provider>
   );

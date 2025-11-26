@@ -1,30 +1,35 @@
 // backend/middleware/auth.js
 
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+import User from "../models/user.model.js"; 
 
-export const protect = (req, res, next) => {
+export const protect = async (req, res, next) => { // 🚨 Needs to be async
   let token;
 
-  // 1. Check if token exists in header (Authorization: Bearer <token>)
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     try {
-      // Get token from header (split "Bearer <token>" and take the token part)
-      token = req.headers.authorization.split(' ')[1];
+      // 1. Get token from header: "Bearer <token>"
+      token = req.headers.authorization.split(" ")[1];
 
-      // 2. Verify token using your JWT_SECRET
+      // 2. Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // 3. Attach user ID to the request object (req.user)
-      req.userId = decoded.id; 
+      // 3. Find user by ID and attach to req.user (This satisfies task.controllers.js)
+      // 🚨 FIX: Sets req.user for controllers
+      req.user = await User.findById(decoded.id).select("-password");
 
-      next(); // Move to the next function (the controller)
+      if (!req.user) {
+        return res.status(401).json({ message: "Not authorized, user not found" });
+      }
+
+      next();
     } catch (error) {
       console.error(error);
-      return res.status(401).json({ message: 'Not authorized, token failed' });
+      return res.status(401).json({ message: "Not authorized, token failed or expired" });
     }
   }
 
   if (!token) {
-    return res.status(401).json({ message: 'Not authorized, no token' });
+    return res.status(401).json({ message: "Not authorized, no token" });
   }
 };
